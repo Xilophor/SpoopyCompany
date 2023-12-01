@@ -46,6 +46,12 @@ namespace SpoopyCompany.Patches
                 case "PowerOutage":
                     evntC.StartCoroutine(SpoopyEvents.PowerOutage(RoundManager.Instance));
                     break;
+                case "PowerSurge":
+                    evntC.StartCoroutine(SpoopyEvents.PowerSurge(RoundManager.Instance, StartOfRound.Instance.randomMapSeed + 4));
+                    break;
+                case "BurstPipes":
+                    evntC.StartCoroutine(SpoopyEvents.BurstPipes(RoundManager.Instance));
+                    break;
             }
         }
 
@@ -61,21 +67,28 @@ namespace SpoopyCompany.Patches
             if (EventTimes.Count > currentEventIndex && __instance.timeScript.currentDayTime > (float)occuranceTimes[currentEventIndex] && (__instance.IsHost || __instance.IsServer))
             {
                 mls.LogInfo("Sending Event to Clients");
+                string currentEvent = EventTimes[occuranceTimes[currentEventIndex]];
 
-                networkHandler.PushEvent(EventTimes[occuranceTimes[currentEventIndex]]);
+                if ((currentEvent == "FlickerLights" || currentEvent == "PowerOutage") && (Object.FindObjectOfType<BreakerBox>()?.isPowerOn == false || __instance.powerOffPermanently))
+                {
+			        currentEventIndex++;
+                    return;
+                }
+
+                networkHandler.EventClientRPC(currentEvent);
 
 			    currentEventIndex++;
             }
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(RoundManager), "LoadNewLevel")]
+        [HarmonyPatch(typeof(RoundManager), "GenerateNewLevelClientRpc")]
         static void ResetVariables()
         {
             mls.LogInfo("Resetting Event variables");
 
             hasFlickered = false;
-            outageEvent = false;
+            surgeEventOccured = false;
             eventRandom = new(StartOfRound.Instance.randomMapSeed + 4);
             eventHandlerRandom = new(StartOfRound.Instance.randomMapSeed + 5);
             occuranceTimes = new List<int>();
@@ -137,18 +150,15 @@ namespace SpoopyCompany.Patches
                     switch (evnt.Key)
                     {
                         case "FlickerLights":
-                            if(outageEvent) continue;
+                            if(surgeEventOccured) continue; //! Ensure Power Outage doesn't happen multiple times in a row, increase odds of explosion
+                            
 
-                            if (eventHandlerRandom.NextDouble() < 1 && hasFlickered)//0.09f && hasFlickered)
+                            if (eventHandlerRandom.NextDouble() < 0.0117f && hasFlickered)
                             {
-                                int timeToOccur = eventHandlerRandom.Next((int)(2f+timeOffset),(int)(__instance.timeScript.lengthOfHours * (float)__instance.hourTimeBetweenEnemySpawnBatches + timeOffset));
-                                EventTimes.Add(timeToOccur, "PowerOutage");
-                                occuranceTimes.Add(timeToOccur);
-                                occuranceTimes.Sort();
-
-
-                                mls.LogInfo("Event PowerOutage chosen");
-                                continue;
+                                type = "PowerSurge";
+                                surgeEventOccured = true;
+                            } else if (eventHandlerRandom.NextDouble() < 0.09f && hasFlickered) {
+                                type = "PowerOutage";
                             } else {
                                 maxAmount = 3;
                                 type = "FlickerLights";
@@ -194,7 +204,7 @@ namespace SpoopyCompany.Patches
         public static Random eventHandlerRandom;
         public static Random eventRandom;
         public static bool hasFlickered = false;
-        public static bool outageEvent = false;
+        public static bool surgeEventOccured = false;
 
         static int currentEventIndex;
 
@@ -205,7 +215,7 @@ namespace SpoopyCompany.Patches
 
         // EventTypes = [ "None", "FlickerLights", "PowerOutage", "BurstPipes" ];
         static readonly Dictionary<string, float> eventChances = new() {
-            {"FlickerLights", 1}//0.18f}
+            {"FlickerLights", 0.18f}
             }; // Chance out of 1
     }
 } // TODO: add check for lights & add outdoor lights to flicker

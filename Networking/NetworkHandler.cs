@@ -26,17 +26,6 @@ namespace SpoopyComponents
             OnEvent = null;
         }
 
-        public void PushEvent(string eventType)
-        {
-            EventServerRPC(eventType);
-        }
-
-        [ServerRpc]
-        public void EventServerRPC(string eventType)
-        {
-            EventClientRPC(eventType);
-        }
-
         [ClientRpc]
         public void EventClientRPC(string eventType)
         {
