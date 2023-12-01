@@ -23,6 +23,18 @@ namespace SpoopyComponents
             // if (!IsServer || !IsHost && IsOwner) {
             // }
             Debug.Log("SpoopyCompany - NetworkHandler created");
+            OnEvent = null;
+        }
+
+        public void PushEvent(string eventType)
+        {
+            EventServerRPC(eventType);
+        }
+
+        [ServerRpc]
+        public void EventServerRPC(string eventType)
+        {
+            EventClientRPC(eventType);
         }
 
         [ClientRpc]
@@ -30,7 +42,7 @@ namespace SpoopyComponents
         {
             if(OnEvent == null) return;
             OnEvent(eventType);
-            //Debug.Log("SpoopyCompany - Fired Event: " + eventType + " with " + OnEvent.GetInvocationList().Length + " listener(s)");
+            Debug.Log("SpoopyCompany - Fired Event: " + eventType + " with " + OnEvent.GetInvocationList().Length + " listener(s)");
         }
 
         public static event Action<string> OnEvent;

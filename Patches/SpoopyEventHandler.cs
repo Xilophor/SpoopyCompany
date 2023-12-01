@@ -58,11 +58,11 @@ namespace SpoopyCompany.Patches
                 return;
             if (!__instance.dungeonFinishedGeneratingForAllPlayers)
                 return;
-            if (EventTimes.Count > currentEventIndex && __instance.timeScript.currentDayTime > (float)occuranceTimes[currentEventIndex])
+            if (EventTimes.Count > currentEventIndex && __instance.timeScript.currentDayTime > (float)occuranceTimes[currentEventIndex] && (__instance.IsHost || __instance.IsServer))
             {
                 mls.LogInfo("Sending Event to Clients");
 
-                networkHandler.EventClientRPC(EventTimes[occuranceTimes[currentEventIndex]]);
+                networkHandler.PushEvent(EventTimes[occuranceTimes[currentEventIndex]]);
 
 			    currentEventIndex++;
             }

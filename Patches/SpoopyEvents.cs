@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Threading;
 using BepInEx.Logging;
 using SpoopyCompany.Patches;
 using UnityEngine;
@@ -25,7 +26,7 @@ namespace SpoopyCompany
                 __instance.FlickerLights(false, false);
                 yield return new WaitForSeconds((float)SpoopyEventHandler.eventRandom.Next(10,30)/10);
                 __instance.FlickerLights(false, false);
-                yield return new WaitForSeconds((float)SpoopyEventHandler.eventRandom.Next(24,89)/10);
+                yield return new WaitForSeconds((float)SpoopyEventHandler.eventRandom.Next(24,56)/10);
                 __instance.FlickerLights(false, false);
                 yield return new WaitForSeconds((float)SpoopyEventHandler.eventRandom.Next(15,25)/10);
                 __instance.FlickerLights(false, false);
@@ -34,15 +35,30 @@ namespace SpoopyCompany
                 __instance.powerOffPermanently = true;
                 SpoopyEventHandler.outageEvent = true;
 
-		        LungProp apparatice = Object.FindObjectOfType<LungProp>();
-		        Landmine landmine = Resources.FindObjectsOfTypeAll<Landmine>()[0];
+		        LungProp apparatice = null;
+
+                foreach (var prop in Object.FindObjectsOfType<LungProp>())
+                {
+                    if (prop.isLungDocked)
+                    {
+                        apparatice = prop;
+                        break;
+                    }
+                }
+
                 if (apparatice == null)
                     yield break;
+
+		        Landmine landmine = Resources.FindObjectsOfTypeAll<Landmine>()[0];
                 AudioSource explosionAudio = apparatice.gameObject.GetComponent<AudioSource>();
                 explosionAudio.Stop();
-                explosionAudio.PlayOneShot(landmine.mineDetonate, 1.1f); //? Plays a little louder than max, tis it too much?
-                Landmine.SpawnExplosion(apparatice.transform.position, true, 4.6f, 8.4f);
+                explosionAudio.PlayOneShot(landmine.mineDetonate, 1.1f); //? Plays a little louder than max, is it too much?
+                Landmine.SpawnExplosion(apparatice.transform.position, true, 8.6f, 15.2f);
+
                 apparatice.SetScrapValue(SpoopyEventHandler.eventRandom.Next(8,28)); //* Clients should match due to using same Random
+                apparatice.gameObject.transform.GetChild(3).gameObject.SetActive(false); // Disable apparatice light
+                apparatice.lungDeviceMesh.materials[1].CopyMatchingPropertiesFromMaterial(apparatice.lungDeviceMesh.materials[0]); // don't understand materials, but it just works
+                // TODO: Ensure destroy apparatice is still visibly destroyed when save is reloaded - replace with custom model?
             }
             else
             {
@@ -51,7 +67,7 @@ namespace SpoopyCompany
                     yield break;
                 
                 __instance.FlickerLights(false, false);
-                yield return new WaitForSeconds((float)SpoopyEventHandler.eventRandom.Next(12,88)/10);
+                yield return new WaitForSeconds((float)SpoopyEventHandler.eventRandom.Next(12,56)/10);
                 __instance.FlickerLights(false, false);
                 yield return new WaitForSeconds(1.5f);
                 breakerBox.SwitchBreaker(false);

@@ -10,15 +10,12 @@ namespace SpoopyCompany
     public class NetworkObjectManager
     {
 
-        [HarmonyPatch(typeof(MenuManager), "Start")]
-        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPrefix]
         public static void Init()
         {
             if (networkPrefab != null) return;
-            networkPrefab = new GameObject("SpoopyNetwork");
-            Object.DontDestroyOnLoad(networkPrefab);
-            networkPrefab.SetActive(false);
-            networkPrefab.AddComponent<NetworkObject>();
+            networkPrefab = (GameObject)Assets.MainAssetBundle.LoadAsset("spoopynetworkhandler");
             networkPrefab.AddComponent<NetworkHandler>();
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
@@ -34,10 +31,8 @@ namespace SpoopyCompany
                 if(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
                     Plugin.Instance.mls.LogInfo("Spawning network handler");
-                    var networkObject = Object.Instantiate(networkPrefab, Vector3.zero, Quaternion.identity);
-                    networkObject.SetActive(true);
-                    networkObject.GetComponent<NetworkObject>().Spawn(false);
-                    Plugin.Instance.mls.LogInfo("Spawned network handler");
+                    networkHandlerHost = Object.Instantiate(networkPrefab, Vector3.zero, Quaternion.identity);
+                    networkHandlerHost.GetComponent<NetworkObject>().Spawn(true); // Automatically remove when returning to menu
                 }
             }
             catch
@@ -45,7 +40,27 @@ namespace SpoopyCompany
                 Plugin.Instance.mls.LogError("Failed to spawned network handler");
             }
         }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameNetworkManager), "StartDisconnect")]
+        static void DestroyNetworkHandler()
+        {
+            try
+            {
+                if(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+                {
+                    Plugin.Instance.mls.LogInfo("Destroying network handler");
+                    Object.Destroy(networkHandlerHost);
+                    networkHandlerHost = null;
+                }
+            }
+            catch
+            {
+                Plugin.Instance.mls.LogError("Failed to destroy network handler");
+            }
+        }
         
         static GameObject networkPrefab;
+        static GameObject networkHandlerHost;
     }
 }
