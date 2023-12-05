@@ -109,6 +109,21 @@ namespace SpoopyCompany.Patches
             mls.LogInfo("Unsubscribed from server event");
         }
 
+        [HarmonyPatch(typeof(StartOfRound), "LoadShipGrabbableItems")]
+        [HarmonyPostfix]
+        static void DestroyApparatusOnLoad()
+        {
+            foreach (var apparatus in Object.FindObjectsOfType<LungProp>())
+            {
+                if (apparatus.scrapValue < 60)
+                {
+                    apparatus.gameObject.transform.GetChild(3).gameObject.SetActive(false); // Disable apparatice light
+                    apparatus.lungDeviceMesh.materials[1].CopyMatchingPropertiesFromMaterial(apparatus.lungDeviceMesh.materials[0]); // don't understand materials, but it just works
+                }
+            }
+
+        }
+
         /*
             Add Event Checks to Semi-Hourly updates
         */
