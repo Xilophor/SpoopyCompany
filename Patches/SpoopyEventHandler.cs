@@ -225,8 +225,8 @@ namespace SpoopyCompany.Patches
         static readonly Dictionary<string, float> eventChances = new() { //* Chances of event happening in a day
             {"PowerSurge", Plugin.Instance.PowerSurgeChance.Value},
             {"PowerOutage", Plugin.Instance.PowerOutageChance.Value},
-            {"FlickerLights", Plugin.Instance.FlickerLightsChance.Value},
-            {"BurstPipes", Plugin.Instance.PipeBurstChance.Value}
+            {"FlickerLights", Plugin.Instance.FlickerLightsChance.Value}//,
+            //{"BurstPipes", Plugin.Instance.PipeBurstChance.Value}
             };
     }
 } // TODO: add check for lights & add outdoor lights to flicker

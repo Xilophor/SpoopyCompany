@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -64,10 +64,10 @@ namespace SpoopyCompany
                                                 "PowerSurge",
                                                 0.9f,
                                                 "The % chance there will be a power surge at some point in the day. Lights flickering must occur first. Only host settings apply. Set to 0 to disable.");
-            PipeBurstChance = Config.Bind("Event Chances",
+            /*PipeBurstChance = Config.Bind("Event Chances",
                                                 "PipeBurst",
                                                 1.7f,
-                                                "The % chance the pipes burst at some point in the day. Only host settings apply. Set to 0 to disable.");
+                                                "The % chance the pipes burst at some point in the day. Only host settings apply. Set to 0 to disable.");*/
         }
 
         public ConfigEntry<float> FlickerLightsChance;
